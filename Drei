@@ -1,0 +1,498 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.util.ArrayList;
+
+public class ComplaintSystem {
+
+    static ArrayList<User> users = new ArrayList<>();
+    static ArrayList<Complaint> complaints = new ArrayList<>();
+    static User currentUser = null;
+
+    public static void main(String[] args) {
+        // Default admin account
+        users.add(new User("admin", "admin123", true));
+        new LoginFrame();
+    }
+}
+
+// ========== User Class ==========
+class User {
+    String username;
+    String password;
+    boolean isAdmin;
+
+    User(String username, String password, boolean isAdmin) {
+        this.username = username;
+        this.password = password;
+        this.isAdmin = isAdmin;
+    }
+}
+
+
+class Complaint {
+    String firstName;
+    String lastName;
+    String email;
+    String date;
+    String type;
+    String description;
+    String screenshotPath;   // full path of the image
+    String status;
+
+    Complaint(String firstName, String lastName, String email, String date,
+              String type, String description, String screenshotPath) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.date = date;
+        this.type = type;
+        this.description = description;
+        this.screenshotPath = screenshotPath;
+        this.status = "Pending";
+    }
+
+    public String toString() {
+        return "Name: " + firstName + " " + lastName +
+               "\nEmail: " + email +
+               "\nDate: " + date +
+               "\nType: " + type +
+               "\nStatus: " + status +
+               "\nDescription: " + description +
+               "\nScreenshot: " + (screenshotPath.isEmpty() ? "None" : screenshotPath) +
+               "\n----------------------------------------";
+    }
+}
+
+
+class LoginFrame extends JFrame {
+    JTextField userField;
+    JPasswordField passField;
+
+    LoginFrame() {
+        setTitle("Public Service Complaint System - Login");
+        setSize(400, 280);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10, 10));
+
+        JLabel title = new JLabel("Login", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 22));
+        add(title, BorderLayout.NORTH);
+
+        JPanel panel = new JPanel(new GridLayout(4, 1, 8, 8));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+
+        panel.add(new JLabel("Username:"));
+        userField = new JTextField();
+        panel.add(userField);
+
+        panel.add(new JLabel("Password:"));
+        passField = new JPasswordField();
+        panel.add(passField);
+
+        add(panel, BorderLayout.CENTER);
+
+        JPanel btnPanel = new JPanel();
+        JButton loginBtn = new JButton("Login");
+        JButton registerBtn = new JButton("Register");
+
+        loginBtn.addActionListener(e -> login());
+        registerBtn.addActionListener(e -> {
+            dispose();
+            new RegisterFrame();
+        });
+
+        btnPanel.add(loginBtn);
+        btnPanel.add(registerBtn);
+        add(btnPanel, BorderLayout.SOUTH);
+
+        setVisible(true);
+    }
+
+    void login() {
+        String username = userField.getText().trim();
+        String password = new String(passField.getPassword());
+
+        for (User u : ComplaintSystem.users) {
+            if (u.username.equals(username) && u.password.equals(password)) {
+                ComplaintSystem.currentUser = u;
+                dispose();
+                new DashboardFrame();
+                return;
+            }
+        }
+        JOptionPane.showMessageDialog(this, "Wrong username or password!");
+    }
+}
+
+// ========== Register Window ==========
+class RegisterFrame extends JFrame {
+    JTextField userField;
+    JPasswordField passField;
+
+    RegisterFrame() {
+        setTitle("Register");
+        setSize(400, 280);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10, 10));
+
+        JLabel title = new JLabel("Create Account", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 20));
+        add(title, BorderLayout.NORTH);
+
+        JPanel panel = new JPanel(new GridLayout(4, 1, 8, 8));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+
+        panel.add(new JLabel("Username:"));
+        userField = new JTextField();
+        panel.add(userField);
+
+        panel.add(new JLabel("Password:"));
+        passField = new JPasswordField();
+        panel.add(passField);
+
+        add(panel, BorderLayout.CENTER);
+
+        JPanel btnPanel = new JPanel();
+        JButton registerBtn = new JButton("Register");
+        JButton backBtn = new JButton("Back");
+
+        registerBtn.addActionListener(e -> register());
+        backBtn.addActionListener(e -> {
+            dispose();
+            new LoginFrame();
+        });
+
+        btnPanel.add(registerBtn);
+        btnPanel.add(backBtn);
+        add(btnPanel, BorderLayout.SOUTH);
+
+        setVisible(true);
+    }
+
+    void register() {
+        String username = userField.getText().trim();
+        String password = new String(passField.getPassword());
+
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill all fields!");
+            return;
+        }
+
+        for (User u : ComplaintSystem.users) {
+            if (u.username.equals(username)) {
+                JOptionPane.showMessageDialog(this, "Username already exists!");
+                return;
+            }
+        }
+
+        ComplaintSystem.users.add(new User(username, password, false));
+        JOptionPane.showMessageDialog(this, "Registration successful!");
+        dispose();
+        new LoginFrame();
+    }
+}
+
+// ========== Dashboard ==========
+class DashboardFrame extends JFrame {
+
+    DashboardFrame() {
+        setTitle("Complaint System - Dashboard");
+        setSize(500, 420);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        String welcomeText = "Welcome, " + ComplaintSystem.currentUser.username;
+        if (ComplaintSystem.currentUser.isAdmin) {
+            welcomeText += " (Administrator)";
+        }
+
+        JLabel title = new JLabel(welcomeText, SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 18));
+        title.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
+        add(title, BorderLayout.NORTH);
+
+        JPanel panel = new JPanel(new GridLayout(5, 1, 12, 12));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 60, 20, 60));
+
+        JButton submitBtn = new JButton("Submit Complaint");
+        JButton viewBtn = new JButton("View All Complaints");
+        JButton reportBtn = new JButton("Reports & Analytics");
+        JButton logoutBtn = new JButton("Logout");
+
+        Font btnFont = new Font("Arial", Font.PLAIN, 15);
+        submitBtn.setFont(btnFont);
+        viewBtn.setFont(btnFont);
+        reportBtn.setFont(btnFont);
+        logoutBtn.setFont(btnFont);
+
+        submitBtn.addActionListener(e -> new SubmitComplaintFrame());
+        viewBtn.addActionListener(e -> viewComplaints());
+        reportBtn.addActionListener(e -> showReports());
+        logoutBtn.addActionListener(e -> {
+            ComplaintSystem.currentUser = null;
+            dispose();
+            new LoginFrame();
+        });
+
+        panel.add(submitBtn);
+        panel.add(viewBtn);
+        panel.add(reportBtn);
+        panel.add(logoutBtn);
+
+        add(panel, BorderLayout.CENTER);
+        setVisible(true);
+    }
+
+    void viewComplaints() {
+        if (ComplaintSystem.complaints.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No complaints submitted yet.");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        int i = 1;
+        for (Complaint c : ComplaintSystem.complaints) {
+            sb.append(i++).append(".\n").append(c.toString()).append("\n");
+        }
+
+        JTextArea area = new JTextArea(sb.toString());
+        area.setEditable(false);
+        area.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        JScrollPane scroll = new JScrollPane(area);
+        scroll.setPreferredSize(new Dimension(500, 380));
+
+        JOptionPane.showMessageDialog(this, scroll, "All Complaints", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    void showReports() {
+        int total = ComplaintSystem.complaints.size();
+        int technical = 0, content = 0, ui = 0, accessibility = 0, other = 0;
+
+        for (Complaint c : ComplaintSystem.complaints) {
+            switch (c.type) {
+                case "Technical Issue": technical++; break;
+                case "Content Error": content++; break;
+                case "User Interface Problem": ui++; break;
+                case "Accessibility Issue": accessibility++; break;
+                default: other++;
+            }
+        }
+
+        String report = "========== COMPLAINT REPORTS ==========\n\n"
+                + "Total Complaints          : " + total + "\n\n"
+                + "Technical Issue           : " + technical + "\n"
+                + "Content Error             : " + content + "\n"
+                + "User Interface Problem    : " + ui + "\n"
+                + "Accessibility Issue       : " + accessibility + "\n"
+                + "Other                     : " + other + "\n";
+
+        JOptionPane.showMessageDialog(this, report, "Reports & Analytics", JOptionPane.INFORMATION_MESSAGE);
+    }
+}
+
+
+class SubmitComplaintFrame extends JFrame {
+
+    JTextField firstNameField, lastNameField, emailField, dateField;
+    JRadioButton techBtn, contentBtn, uiBtn, accessBtn, otherBtn;
+    JTextArea descArea;
+    JLabel fileLabel;
+    JLabel imagePreviewLabel;          // for showing the image
+    String selectedFilePath = "";      // full path of the image
+
+    SubmitComplaintFrame() {
+        setTitle("Website Complaint Form");
+        setSize(550, 750);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        // Title
+        JLabel title = new JLabel("Website Complaint Form", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 22));
+        title.setBorder(BorderFactory.createEmptyBorder(15, 0, 5, 0));
+        add(title, BorderLayout.NORTH);
+
+        // Main form panel
+        JPanel form = new JPanel();
+        form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
+        form.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
+
+        // Full Name
+        form.add(createLabel("Full Name"));
+        JPanel namePanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        firstNameField = new JTextField();
+        lastNameField = new JTextField();
+        namePanel.add(createFieldWithHint(firstNameField, "First Name"));
+        namePanel.add(createFieldWithHint(lastNameField, "Last Name"));
+        form.add(namePanel);
+        form.add(Box.createVerticalStrut(10));
+
+        // Email
+        form.add(createLabel("Email Address"));
+        emailField = new JTextField();
+        form.add(createFieldWithHint(emailField, "example@example.com"));
+        form.add(Box.createVerticalStrut(10));
+
+        // Date
+        form.add(createLabel("Date of Incident"));
+        dateField = new JTextField();
+        form.add(createFieldWithHint(dateField, "MM-DD-YYYY"));
+        form.add(Box.createVerticalStrut(10));
+
+        // Type of Complaint
+        form.add(createLabel("Type of Complaint"));
+        techBtn = new JRadioButton("Technical Issue");
+        contentBtn = new JRadioButton("Content Error");
+        uiBtn = new JRadioButton("User Interface Problem");
+        accessBtn = new JRadioButton("Accessibility Issue");
+        otherBtn = new JRadioButton("Other");
+
+        ButtonGroup group = new ButtonGroup();
+        group.add(techBtn);
+        group.add(contentBtn);
+        group.add(uiBtn);
+        group.add(accessBtn);
+        group.add(otherBtn);
+        techBtn.setSelected(true);
+
+        JPanel radioPanel = new JPanel();
+        radioPanel.setLayout(new BoxLayout(radioPanel, BoxLayout.Y_AXIS));
+        radioPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        radioPanel.add(techBtn);
+        radioPanel.add(contentBtn);
+        radioPanel.add(uiBtn);
+        radioPanel.add(accessBtn);
+        radioPanel.add(otherBtn);
+        form.add(radioPanel);
+        form.add(Box.createVerticalStrut(10));
+
+        // Description
+        form.add(createLabel("Description of the Complaint"));
+        descArea = new JTextArea(4, 20);
+        descArea.setLineWrap(true);
+        descArea.setWrapStyleWord(true);
+        JScrollPane scroll = new JScrollPane(descArea);
+        scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+        form.add(scroll);
+        form.add(Box.createVerticalStrut(10));
+
+        // Upload Screenshot + Preview
+        form.add(createLabel("Upload Screenshot (if any)"));
+
+        JPanel filePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton fileBtn = new JButton("Choose File");
+        fileLabel = new JLabel("No file selected");
+        fileBtn.addActionListener(e -> chooseFile());
+        filePanel.add(fileBtn);
+        filePanel.add(fileLabel);
+        filePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(filePanel);
+
+        // Image Preview Label
+        imagePreviewLabel = new JLabel("Image preview will appear here", SwingConstants.CENTER);
+        imagePreviewLabel.setPreferredSize(new Dimension(220, 150));
+        imagePreviewLabel.setMinimumSize(new Dimension(220, 150));
+        imagePreviewLabel.setMaximumSize(new Dimension(220, 150));
+        imagePreviewLabel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        imagePreviewLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(Box.createVerticalStrut(8));
+        form.add(imagePreviewLabel);
+
+        // Scroll pane for the form
+        JScrollPane mainScroll = new JScrollPane(form);
+        mainScroll.setBorder(null);
+        add(mainScroll, BorderLayout.CENTER);
+
+        // Submit button
+        JButton submitBtn = new JButton("Submit");
+        submitBtn.setBackground(new Color(0, 150, 0));
+        submitBtn.setForeground(Color.WHITE);
+        submitBtn.setFont(new Font("Arial", Font.BOLD, 15));
+        submitBtn.setFocusPainted(false);
+        submitBtn.addActionListener(e -> submitComplaint());
+
+        JPanel bottom = new JPanel();
+        bottom.setBorder(BorderFactory.createEmptyBorder(10, 0, 15, 0));
+        bottom.add(submitBtn);
+        add(bottom, BorderLayout.SOUTH);
+
+        setVisible(true);
+    }
+
+    JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Arial", Font.BOLD, 13));
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return label;
+    }
+
+    JPanel createFieldWithHint(JTextField field, String hint) {
+        JPanel p = new JPanel(new BorderLayout());
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)));
+        p.add(field, BorderLayout.CENTER);
+        JLabel hintLabel = new JLabel(hint);
+        hintLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+        hintLabel.setForeground(Color.GRAY);
+        p.add(hintLabel, BorderLayout.SOUTH);
+        p.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return p;
+    }
+
+    void chooseFile() {
+        JFileChooser chooser = new JFileChooser();
+        // Optional: only show image files
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "Image files", "jpg", "jpeg", "png", "gif", "bmp"));
+
+        int result = chooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            selectedFilePath = file.getAbsolutePath();
+            fileLabel.setText(file.getName());
+
+            // Show image preview
+            try {
+                ImageIcon icon = new ImageIcon(selectedFilePath);
+                Image img = icon.getImage().getScaledInstance(200, 140, Image.SCALE_SMOOTH);
+                imagePreviewLabel.setIcon(new ImageIcon(img));
+                imagePreviewLabel.setText(""); // remove the placeholder text
+            } catch (Exception ex) {
+                imagePreviewLabel.setIcon(null);
+                imagePreviewLabel.setText("Cannot preview this image");
+            }
+        }
+    }
+
+    void submitComplaint() {
+        String firstName = firstNameField.getText().trim();
+        String lastName = lastNameField.getText().trim();
+        String email = emailField.getText().trim();
+        String date = dateField.getText().trim();
+        String description = descArea.getText().trim();
+
+        if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() ||
+            date.isEmpty() || description.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all required fields!");
+            return;
+        }
+
+        String type = "Other";
+        if (techBtn.isSelected()) type = "Technical Issue";
+        else if (contentBtn.isSelected()) type = "Content Error";
+        else if (uiBtn.isSelected()) type = "User Interface Problem";
+        else if (accessBtn.isSelected()) type = "Accessibility Issue";
+
+        Complaint c = new Complaint(firstName, lastName, email, date, type, description, selectedFilePath);
+        ComplaintSystem.complaints.add(c);
+
+        JOptionPane.showMessageDialog(this, "Complaint submitted successfully!\nThank you for your feedback.");
+        dispose();
+    }
+}
