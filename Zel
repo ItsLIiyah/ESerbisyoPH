@@ -1,75 +1,313 @@
 package com.mycompany.eserbisyoph;
-import javax.swing.JOptionPane;
 
-public class ESerbisyoPH {
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
-    public static void main(String[] args) {
+public class ESerbisyoPH extends JFrame {
 
-        int totalRecords = Integer.parseInt(
-                JOptionPane.showInputDialog(
-                        "ESerbisyoPH\n\nIlang citizen records ang ilalagay?"
-                )
-        );
+    private JTextField txtName, txtAge, txtAddress, txtEmail, txtSearch;
+    private JComboBox<String> cmbSex, cmbStatus, cmbEmployment;
 
-        String[] names = new String[totalRecords];
-        int[] ages = new int[totalRecords];
-        String[] sex = new String[totalRecords];
-        String[] status = new String[totalRecords];
-        String[] address = new String[totalRecords];
-        String[] email = new String[totalRecords];
-        String[] employment = new String[totalRecords];
+    private JTable table;
+    private DefaultTableModel model;
 
-        for (int i = 0; i < totalRecords; i++) {
+    public ESerbisyoPH() {
 
-            names[i] = JOptionPane.showInputDialog(
-                    "Enter Full Name #" + (i + 1));
+        setTitle("ESerbisyoPH - Reports and Analytics");
+        setSize(1100, 650);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout(10, 10));
 
-            ages[i] = Integer.parseInt(
-                    JOptionPane.showInputDialog(
-                            "Enter Age"));
+        JLabel heading = new JLabel(
+                "ESERBISYOPH REPORTS AND ANALYTICS",
+                SwingConstants.CENTER);
 
-            sex[i] = JOptionPane.showInputDialog(
-                    "Enter Sex (Male/Female)");
+        heading.setFont(new Font("Arial", Font.BOLD, 24));
+        add(heading, BorderLayout.NORTH);
 
-            status[i] = JOptionPane.showInputDialog(
-                    "Enter Civil Status");
+        JPanel formPanel = new JPanel(new GridLayout(7, 2, 10, 10));
+        formPanel.setBorder(
+                BorderFactory.createTitledBorder("Citizen Information"));
 
-            address[i] = JOptionPane.showInputDialog(
-                    "Enter Address");
+        txtName = new JTextField();
+        txtAge = new JTextField();
+        txtAddress = new JTextField();
+        txtEmail = new JTextField();
 
-            email[i] = JOptionPane.showInputDialog(
-                    "Enter Email Address");
+        cmbSex = new JComboBox<>(
+                new String[]{"Male", "Female"});
 
-            employment[i] = JOptionPane.showInputDialog(
-                    "Enter Employment Status");
+        cmbStatus = new JComboBox<>(
+                new String[]{"Single", "Married", "Widowed"});
+
+        cmbEmployment = new JComboBox<>(
+                new String[]{
+                    "Employed",
+                    "Unemployed",
+                    "Student"
+                });
+
+        formPanel.add(new JLabel("Full Name:"));
+        formPanel.add(txtName);
+
+        formPanel.add(new JLabel("Age:"));
+        formPanel.add(txtAge);
+
+        formPanel.add(new JLabel("Sex:"));
+        formPanel.add(cmbSex);
+
+        formPanel.add(new JLabel("Civil Status:"));
+        formPanel.add(cmbStatus);
+
+        formPanel.add(new JLabel("Address:"));
+        formPanel.add(txtAddress);
+
+        formPanel.add(new JLabel("Email Address:"));
+        formPanel.add(txtEmail);
+
+        formPanel.add(new JLabel("Employment Status:"));
+        formPanel.add(cmbEmployment);
+
+        JPanel buttonPanel = new JPanel();
+
+        JButton btnRegister = new JButton("Register");
+        JButton btnUpdate = new JButton("Update");
+        JButton btnDelete = new JButton("Delete");
+        JButton btnClear = new JButton("Clear");
+
+        buttonPanel.add(btnRegister);
+        buttonPanel.add(btnUpdate);
+        buttonPanel.add(btnDelete);
+        buttonPanel.add(btnClear);
+
+        JPanel leftPanel = new JPanel(new BorderLayout());
+
+        leftPanel.add(formPanel, BorderLayout.CENTER);
+        leftPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        add(leftPanel, BorderLayout.WEST);
+
+        String[] columns = {
+            "Name",
+            "Age",
+            "Sex",
+            "Civil Status",
+            "Address",
+            "Email",
+            "Employment"
+        };
+
+        model = new DefaultTableModel(columns, 0);
+
+        table = new JTable(model);
+
+        JScrollPane scrollPane = new JScrollPane(table);
+
+        add(scrollPane, BorderLayout.CENTER);
+
+        JPanel searchPanel = new JPanel();
+
+        txtSearch = new JTextField(15);
+
+        JButton btnSearch = new JButton("Search");
+        JButton btnShowAll = new JButton("Show All");
+
+        searchPanel.add(new JLabel("Search Name:"));
+        searchPanel.add(txtSearch);
+        searchPanel.add(btnSearch);
+        searchPanel.add(btnShowAll);
+
+        add(searchPanel, BorderLayout.SOUTH);
+
+        btnRegister.addActionListener(e -> registerCitizen());
+
+        btnUpdate.addActionListener(e -> updateCitizen());
+
+        btnDelete.addActionListener(e -> deleteCitizen());
+
+        btnClear.addActionListener(e -> clearFields());
+
+        btnSearch.addActionListener(e -> searchCitizen());
+
+        btnShowAll.addActionListener(e -> showAllRecords());
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+
+            if (!e.getValueIsAdjusting()) {
+
+                int row = table.getSelectedRow();
+
+                if (row != -1) {
+
+                    txtName.setText(
+                            model.getValueAt(row, 0).toString());
+
+                    txtAge.setText(
+                            model.getValueAt(row, 1).toString());
+
+                    cmbSex.setSelectedItem(
+                            model.getValueAt(row, 2).toString());
+
+                    cmbStatus.setSelectedItem(
+                            model.getValueAt(row, 3).toString());
+
+                    txtAddress.setText(
+                            model.getValueAt(row, 4).toString());
+
+                    txtEmail.setText(
+                            model.getValueAt(row, 5).toString());
+
+                    cmbEmployment.setSelectedItem(
+                            model.getValueAt(row, 6).toString());
+                }
+            }
+        });
+    }
+
+    private void registerCitizen() {
+
+        if (txtName.getText().trim().isEmpty()
+                || txtAge.getText().trim().isEmpty()) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please complete all fields.");
+
+            return;
         }
 
-        String report =
-                "=========== ESERBISYOPH ===========\n" +
-                "      REPORTS AND ANALYTICS\n" +
-                "==================================\n\n" +
-                "TOTAL RECORDS: " + totalRecords + "\n\n";
+        try {
 
-        for (int i = 0; i < totalRecords; i++) {
+            int age =
+                    Integer.parseInt(txtAge.getText());
 
-            report += "Citizen #" + (i + 1) + "\n";
-            report += "Name: " + names[i] + "\n";
-            report += "Age: " + ages[i] + "\n";
-            report += "Sex: " + sex[i] + "\n";
-            report += "Civil Status: " + status[i] + "\n";
-            report += "Address: " + address[i] + "\n";
-            report += "Email: " + email[i] + "\n";
-            report += "Employment: " + employment[i] + "\n";
-            report += "----------------------------------\n";
+            model.addRow(new Object[]{
+                txtName.getText(),
+                age,
+                cmbSex.getSelectedItem(),
+                cmbStatus.getSelectedItem(),
+                txtAddress.getText(),
+                txtEmail.getText(),
+                cmbEmployment.getSelectedItem()
+            });
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Citizen Registered Successfully!");
+
+            clearFields();
+
+        } catch (NumberFormatException ex) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Invalid Age.");
+        }
+    }
+
+    private void updateCitizen() {
+
+        int row = table.getSelectedRow();
+
+        if (row == -1) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Select a record first.");
+
+            return;
+        }
+
+        model.setValueAt(txtName.getText(), row, 0);
+        model.setValueAt(txtAge.getText(), row, 1);
+        model.setValueAt(cmbSex.getSelectedItem(), row, 2);
+        model.setValueAt(cmbStatus.getSelectedItem(), row, 3);
+        model.setValueAt(txtAddress.getText(), row, 4);
+        model.setValueAt(txtEmail.getText(), row, 5);
+        model.setValueAt(cmbEmployment.getSelectedItem(), row, 6);
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Record Updated Successfully!");
+    }
+
+    private void deleteCitizen() {
+
+        int row = table.getSelectedRow();
+
+        if (row == -1) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Select a record first.");
+
+            return;
+        }
+
+        model.removeRow(row);
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Record Deleted Successfully!");
+
+        clearFields();
+    }
+
+    private void searchCitizen() {
+
+        String keyword =
+                txtSearch.getText().trim().toLowerCase();
+
+        if (keyword.isEmpty()) {
+            return;
+        }
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+
+            String name =
+                    model.getValueAt(i, 0)
+                            .toString()
+                            .toLowerCase();
+
+            if (name.contains(keyword)) {
+
+                table.setRowSelectionInterval(i, i);
+
+                return;
+            }
         }
 
         JOptionPane.showMessageDialog(
-                null,
-                report,
-                "ESerbisyoPH Reports and Analytics",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+                this,
+                "Record Not Found.");
+    }
 
-        System.exit(0);
+    private void showAllRecords() {
+
+        table.clearSelection();
+        txtSearch.setText("");
+    }
+
+    private void clearFields() {
+
+        txtName.setText("");
+        txtAge.setText("");
+        txtAddress.setText("");
+        txtEmail.setText("");
+
+        cmbSex.setSelectedIndex(0);
+        cmbStatus.setSelectedIndex(0);
+        cmbEmployment.setSelectedIndex(0);
+
+        table.clearSelection();
+    }
+
+    public static void main(String[] args) {
+
+        SwingUtilities.invokeLater(() -> {
+            new ESerbisyoPH().setVisible(true);
+        });
     }
 }
