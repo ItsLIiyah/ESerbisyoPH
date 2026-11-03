@@ -1,1 +1,412 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
+abstract class MenuItem {
+    private final int id;
+    private final String name;
+    private final double price;
+
+    public MenuItem(int id, String name, double price) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public double getPrice() { return price; }
+
+    public abstract String getDetails();
+}
+
+
+class FoodItem extends MenuItem {
+    public FoodItem(int id, String name, double price) {
+        super(id, name, price);
+    }
+
+    @Override
+    public String getDetails() {
+        return "[FOOD]";
+    }
+}
+
+class BeverageItem extends MenuItem {
+    public BeverageItem(int id, String name, double price) {
+        super(id, name, price);
+    }
+
+    @Override
+    public String getDetails() {
+        return "[DRINK]";
+    }
+}
+class OrderItem {
+    private final MenuItem item;
+    private final int quantity;
+
+    public OrderItem(MenuItem item, int quantity) {
+        this.item = item;
+        this.quantity = quantity;
+    }
+
+    public MenuItem getItem() { return item; }
+    public int getQuantity() { return quantity; }
+
+    public double getSubtotal() {
+        return item.getPrice() * quantity;
+    }
+}
+
+interface Payable {
+    boolean pay(double amount);
+}
+
+class CashPayment implements Payable {
+    private double cash;
+    private double change;
+
+    @Override
+    public boolean pay(double amount) {
+        if (cash < amount) {
+            return false;
+        }
+        change = cash - amount;
+        return true;
+    }
+
+    public void setCash(double cash) {
+        this.cash = cash;
+    }
+
+    public double getChange() {
+        return change;
+    }
+}
+
+class Order {
+    private static int nextId = 1001;
+    private final int orderId;
+    private final List<OrderItem> items = new ArrayList<>();
+    private String status = "Preparing";
+
+    public Order() {
+        orderId = nextId++;
+    }
+
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void addItem(MenuItem item, int quantity) {
+        if (quantity > 0) {
+            items.add(new OrderItem(item, quantity));
+        }
+    }
+
+    public boolean isEmpty() {
+        return items.isEmpty();
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    public double getTotal() {
+        double total = 0;
+        for (OrderItem item : items) {
+            total += item.getSubtotal();
+        }
+        return total;
+    }
+}
+
+public class FastBiteSystem extends JFrame {
+    private static final List<MenuItem> menu = new ArrayList<>();
+    private static final List<Order> orders = new ArrayList<>();
+    private static double totalSales = 0;
+
+    private final JTabbedPane tabbedPane;
+    
+    private JTable menuTable;
+    private DefaultTableModel menuTableModel;
+    private JTable cartTable;
+    private DefaultTableModel cartTableModel;
+    private JLabel lblCartTotal;
+    private Order currentOrder;
+
+    private JTable ordersTable;
+    private DefaultTableModel ordersTableModel;
+
+    private JLabel lblTotalSales;
+    private JLabel lblTotalOrders;
+    private JTable salesTable;
+    private DefaultTableModel salesTableModel;
+
+    public FastBiteSystem() {
+        loadMenu();
+        currentOrder = new Order();
+
+        setTitle("FastBite System - GUI");
+        setSize(850, 550);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        tabbedPane = new JTabbedPane();
+        tabbedPane.addTab("Place Order", createOrderPanel());
+        tabbedPane.addTab("Manage Orders", createManageOrdersPanel());
+        tabbedPane.addTab("Sales Report", createSalesReportPanel());
+
+        add(tabbedPane);
+    }
+
+    private void loadMenu() {
+        menu.add(new FoodItem(1, "Burger", 85.00));
+        menu.add(new FoodItem(2, "Fried Chicken", 110.00));
+        menu.add(new FoodItem(3, "Fries", 50.00));
+        menu.add(new FoodItem(4, "Spaghetti", 75.00));
+        menu.add(new BeverageItem(5, "Soft Drink", 35.00));
+        menu.add(new BeverageItem(6, "Iced Tea", 40.00));
+    }
+
+    private JPanel createOrderPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        String[] menuColumns = {"ID", "Type", "Item Name", "Price (P)"};
+        menuTableModel = new DefaultTableModel(menuColumns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        menuTable = new JTable(menuTableModel);
+        refreshMenuTable();
+
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setBorder(BorderFactory.createTitledBorder("Menu"));
+        leftPanel.add(new JScrollPane(menuTable), BorderLayout.CENTER);
+
+        JPanel addPanel = new JPanel(new FlowLayout());
+        JLabel lblQty = new JLabel("Qty:");
+        JTextField txtQty = new JTextField("1", 3);
+        JButton btnAdd = new JButton("Add to Cart");
+        
+        btnAdd.addActionListener(e -> {
+            int selectedRow = menuTable.getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(this, "Please select a menu item.", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            try {
+                int qty = Integer.parseInt(txtQty.getText().trim());
+                if (qty <= 0) {
+                    JOptionPane.showMessageDialog(this, "Quantity must be greater than 0.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                int id = (int) menuTableModel.getValueAt(selectedRow, 0);
+                MenuItem selectedItem = null;
+                for (MenuItem m : menu) {
+                    if (m.getId() == id) {
+                        selectedItem = m;
+                        break;
+                    }
+                }
+                if (selectedItem != null) {
+                    currentOrder.addItem(selectedItem, qty);
+                    refreshCartTable();
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Enter a valid number for quantity.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        addPanel.add(lblQty);
+        addPanel.add(txtQty);
+        addPanel.add(btnAdd);
+        leftPanel.add(addPanel, BorderLayout.SOUTH);
+
+        String[] cartColumns = {"Item", "Qty", "Subtotal (P)"};
+        cartTableModel = new DefaultTableModel(cartColumns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        cartTable = new JTable(cartTableModel);
+
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.setBorder(BorderFactory.createTitledBorder("Current Order"));
+        rightPanel.add(new JScrollPane(cartTable), BorderLayout.CENTER);
+
+        JPanel checkoutPanel = new JPanel(new BorderLayout());
+        lblCartTotal = new JLabel("TOTAL: P0.00");
+        lblCartTotal.setFont(new Font("Arial", Font.BOLD, 14));
+        JButton btnCheckout = new JButton("Checkout & Pay");
+
+        btnCheckout.addActionListener(e -> {
+            if (currentOrder.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Cart is empty.", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            String cashStr = JOptionPane.showInputDialog(this, 
+                String.format("Total Amount: P%.2f\nEnter cash received:", currentOrder.getTotal()), 
+                "Payment", JOptionPane.QUESTION_MESSAGE);
+
+            if (cashStr != null) {
+                try {
+                    double cash = Double.parseDouble(cashStr.trim());
+                    CashPayment payment = new CashPayment();
+                    payment.setCash(cash);
+
+                    if (payment.pay(currentOrder.getTotal())) {
+                        JOptionPane.showMessageDialog(this, 
+                            String.format("Payment Successful!\nChange: P%.2f\nOrder No: %d", 
+                            payment.getChange(), currentOrder.getOrderId()), 
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                        orders.add(currentOrder);
+                        totalSales += currentOrder.getTotal();
+                        
+                        currentOrder = new Order();
+                        refreshCartTable();
+                        refreshOrdersTable();
+                        refreshSalesReport();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Insufficient payment amount.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Please enter a valid cash amount.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        checkoutPanel.add(lblCartTotal, BorderLayout.NORTH);
+        checkoutPanel.add(btnCheckout, BorderLayout.CENTER);
+        rightPanel.add(checkoutPanel, BorderLayout.SOUTH);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
+        splitPane.setDividerLocation(420);
+        panel.add(splitPane, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private void refreshMenuTable() {
+        menuTableModel.setRowCount(0);
+        for (MenuItem item : menu) {
+            menuTableModel.addRow(new Object[]{item.getId(), item.getDetails(), item.getName(), String.format("%.2f", item.getPrice())});
+        }
+    }
+
+    private void refreshCartTable() {
+        cartTableModel.setRowCount(0);
+        for (OrderItem oi : currentOrder.getItems()) {
+            cartTableModel.addRow(new Object[]{oi.getItem().getName(), oi.getQuantity(), String.format("%.2f", oi.getSubtotal())});
+        }
+        lblCartTotal.setText(String.format("TOTAL: P%.2f", currentOrder.getTotal()));
+    }
+
+    private JPanel createManageOrdersPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        String[] columns = {"Order No.", "Status", "Total (P)"};
+        ordersTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        ordersTable = new JTable(ordersTableModel);
+
+        panel.add(new JScrollPane(ordersTable), BorderLayout.CENTER);
+
+        JPanel btnPanel = new JPanel(new FlowLayout());
+        JButton btnPreparing = new JButton("Set to Preparing");
+        JButton btnReady = new JButton("Set to Ready");
+        JButton btnCompleted = new JButton("Set to Completed");
+
+        btnPreparing.addActionListener(e -> updateSelectedOrderStatus("Preparing"));
+        btnReady.addActionListener(e -> updateSelectedOrderStatus("Ready"));
+        btnCompleted.addActionListener(e -> updateSelectedOrderStatus("Completed"));
+
+        btnPanel.add(btnPreparing);
+        btnPanel.add(btnReady);
+        btnPanel.add(btnCompleted);
+        panel.add(btnPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private void updateSelectedOrderStatus(String newStatus) {
+        int selectedRow = ordersTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select an order from the table.", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int orderId = (int) ordersTableModel.getValueAt(selectedRow, 0);
+        for (Order o : orders) {
+            if (o.getOrderId() == orderId) {
+                o.setStatus(newStatus);
+                break;
+            }
+        }
+        refreshOrdersTable();
+        refreshSalesReport();
+    }
+
+    private void refreshOrdersTable() {
+        ordersTableModel.setRowCount(0);
+        for (Order o : orders) {
+            ordersTableModel.addRow(new Object[]{o.getOrderId(), o.getStatus(), String.format("%.2f", o.getTotal())});
+        }
+    }
+
+    private JPanel createSalesReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JPanel topInfoPanel = new JPanel(new GridLayout(1, 2));
+        lblTotalOrders = new JLabel("Paid Orders: 0");
+        lblTotalSales = new JLabel("Total Sales: P0.00");
+        lblTotalOrders.setFont(new Font("Arial", Font.BOLD, 14));
+        lblTotalSales.setFont(new Font("Arial", Font.BOLD, 14));
+
+        topInfoPanel.add(lblTotalOrders);
+        topInfoPanel.add(lblTotalSales);
+        panel.add(topInfoPanel, BorderLayout.NORTH);
+
+        String[] columns = {"Order No.", "Status", "Total (P)"};
+        salesTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        salesTable = new JTable(salesTableModel);
+        panel.add(new JScrollPane(salesTable), BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private void refreshSalesReport() {
+        salesTableModel.setRowCount(0);
+        for (Order o : orders) {
+            salesTableModel.addRow(new Object[]{o.getOrderId(), o.getStatus(), String.format("%.2f", o.getTotal())});
+        }
+        lblTotalOrders.setText("Paid Orders: " + orders.size());
+        lblTotalSales.setText(String.format("Total Sales: P%.2f", totalSales));
+    }
+
+ 
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new FastBiteSystem().setVisible(true);
+        });
+    }
+}
