@@ -1,0 +1,75 @@
+package com.mycompany.eserbisyoph;
+import javax.swing.JOptionPane;
+
+public class ESerbisyoPH {
+
+    public static void main(String[] args) {
+
+        int totalRecords = Integer.parseInt(
+                JOptionPane.showInputDialog(
+                        "ESerbisyoPH\n\nIlang citizen records ang ilalagay?"
+                )
+        );
+
+        String[] names = new String[totalRecords];
+        int[] ages = new int[totalRecords];
+        String[] sex = new String[totalRecords];
+        String[] status = new String[totalRecords];
+        String[] address = new String[totalRecords];
+        String[] email = new String[totalRecords];
+        String[] employment = new String[totalRecords];
+
+        for (int i = 0; i < totalRecords; i++) {
+
+            names[i] = JOptionPane.showInputDialog(
+                    "Enter Full Name #" + (i + 1));
+
+            ages[i] = Integer.parseInt(
+                    JOptionPane.showInputDialog(
+                            "Enter Age"));
+
+            sex[i] = JOptionPane.showInputDialog(
+                    "Enter Sex (Male/Female)");
+
+            status[i] = JOptionPane.showInputDialog(
+                    "Enter Civil Status");
+
+            address[i] = JOptionPane.showInputDialog(
+                    "Enter Address");
+
+            email[i] = JOptionPane.showInputDialog(
+                    "Enter Email Address");
+
+            employment[i] = JOptionPane.showInputDialog(
+                    "Enter Employment Status");
+        }
+
+        String report =
+                "=========== ESERBISYOPH ===========\n" +
+                "      REPORTS AND ANALYTICS\n" +
+                "==================================\n\n" +
+                "TOTAL RECORDS: " + totalRecords + "\n\n";
+
+        for (int i = 0; i < totalRecords; i++) {
+
+            report += "Citizen #" + (i + 1) + "\n";
+            report += "Name: " + names[i] + "\n";
+            report += "Age: " + ages[i] + "\n";
+            report += "Sex: " + sex[i] + "\n";
+            report += "Civil Status: " + status[i] + "\n";
+            report += "Address: " + address[i] + "\n";
+            report += "Email: " + email[i] + "\n";
+            report += "Employment: " + employment[i] + "\n";
+            report += "----------------------------------\n";
+        }
+
+        JOptionPane.showMessageDialog(
+                null,
+                report,
+                "ESerbisyoPH Reports and Analytics",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
+        System.exit(0);
+    }
+}
