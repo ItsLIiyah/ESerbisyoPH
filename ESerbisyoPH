@@ -1,1 +1,1319 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+/* =====================================================================
+ *  ESerbisyoPH  -  main portal
+ * ===================================================================== */
+public class ESerbisyoPH {
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new PortalFrame().setVisible(true));
+    }
+}
+
+/* ---------- Government services (abstraction / polymorphism) ---------- */
+abstract class GovernmentService {
+    private final String name;
+    private final String description;
+
+    GovernmentService(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
+
+    String getName() { return name; }
+    String getDescription() { return description; }
+    abstract String getDetails();
+}
+
+class HealthService extends GovernmentService {
+    HealthService() { super("Health Services", "Access public health information and services."); }
+    String getDetails() { return "Health: Medical assistance, health programs, and public healthcare information."; }
+}
+
+class EducationService extends GovernmentService {
+    EducationService() { super("Education Services", "Explore educational programs and assistance."); }
+    String getDetails() { return "Education: Scholarships, school programs, and educational assistance."; }
+}
+
+class PublicSafetyService extends GovernmentService {
+    PublicSafetyService() { super("Public Safety", "Find emergency information and safety programs."); }
+    String getDetails() { return "Public Safety: Emergency contacts, community safety, and disaster preparedness."; }
+}
+
+class SocialService extends GovernmentService {
+    SocialService() { super("Social Services", "Learn about community support programs."); }
+    String getDetails() { return "Social Services: Community assistance, family support, and public welfare programs."; }
+}
+
+/* ---------- Portal window ---------- */
+class PortalFrame extends JFrame {
+
+    private int totalRequests = 0;
+    private final JLabel requestCount = new JLabel("0");
+
+    private final GovernmentService[] services = {
+        new HealthService(), new EducationService(),
+        new PublicSafetyService(), new SocialService()
+    };
+
+    PortalFrame() {
+        setTitle("ESerbisyoPH | Government Agency");
+        setSize(1000, 760);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setMinimumSize(new Dimension(700, 600));
+
+        Color navy = new Color(18, 47, 86);
+        Color blue = new Color(35, 100, 175);
+        Color green = new Color(30, 135, 110);
+        Color background = new Color(242, 246, 251);
+
+        JPanel main = new JPanel(new BorderLayout());
+        main.setBackground(background);
+
+        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(navy);
+        header.setBorder(BorderFactory.createEmptyBorder(25, 18, 25, 28));
+
+        JLabel logo = new JLabel("ESerbisyoPH");
+        logo.setForeground(Color.WHITE);
+        logo.setFont(new Font("Arial", Font.BOLD, 26));
+
+        JLabel tagline = new JLabel("PUBLIC SERVICE \u2022 TRANSPARENCY \u2022 COMMUNITY");
+        tagline.setForeground(Color.WHITE);
+        tagline.setFont(new Font("Arial", Font.PLAIN, 11));
+
+        JPanel brand = new JPanel();
+        brand.setOpaque(false);
+        brand.setLayout(new BoxLayout(brand, BoxLayout.Y_AXIS));
+        brand.add(logo);
+        brand.add(Box.createVerticalStrut(6));
+        brand.add(tagline);
+        header.add(brand, BorderLayout.WEST);
+        main.add(header, BorderLayout.NORTH);
+
+        // Content
+        JPanel content = new JPanel();
+        content.setBackground(background);
+        content.setBorder(BorderFactory.createEmptyBorder(20, 28, 20, 28));
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+
+        JLabel welcome = new JLabel("Welcome to Your Government Portal");
+        welcome.setFont(new Font("Arial", Font.BOLD, 25));
+        welcome.setForeground(navy);
+        welcome.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel intro = new JLabel("Access government services in one convenient place.");
+        intro.setFont(new Font("Arial", Font.PLAIN, 14));
+        intro.setForeground(new Color(90, 100, 115));
+        intro.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        content.add(welcome);
+        content.add(Box.createVerticalStrut(8));
+        content.add(intro);
+        content.add(Box.createVerticalStrut(18));
+
+        // Summary cards
+        JPanel summary = new JPanel(new GridLayout(1, 2, 15, 0));
+        summary.setOpaque(false);
+        summary.setMaximumSize(new Dimension(900, 100));
+        summary.setAlignmentX(Component.LEFT_ALIGNMENT);
+        summary.add(createSummaryCard("GOVERNMENT PILLARS", new JLabel("4"), blue));
+        summary.add(createSummaryCard("SERVICE REQUESTS", requestCount, green));
+        content.add(summary);
+        content.add(Box.createVerticalStrut(18));
+
+        // Service cards
+        JLabel pillarTitle = new JLabel("Explore Our Dashboard");
+        pillarTitle.setFont(new Font("Arial", Font.BOLD, 20));
+        pillarTitle.setForeground(navy);
+        pillarTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(pillarTitle);
+        content.add(Box.createVerticalStrut(12));
+
+        JPanel cards = new JPanel(new GridLayout(2, 2, 15, 15));
+        cards.setOpaque(false);
+        cards.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        for (GovernmentService service : services) {
+            JPanel card = new JPanel();
+            card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+            card.setBackground(Color.WHITE);
+            card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 228, 238)),
+                BorderFactory.createEmptyBorder(14, 18, 14, 18)));
+
+            JLabel name = new JLabel(service.getName());
+            name.setFont(new Font("Arial", Font.BOLD, 17));
+            name.setForeground(navy);
+
+            JTextArea description = new JTextArea(service.getDescription());
+            description.setWrapStyleWord(true);
+            description.setLineWrap(true);
+            description.setEditable(false);
+            description.setOpaque(false);
+            description.setFont(new Font("Arial", Font.PLAIN, 13));
+            description.setForeground(new Color(75, 85, 100));
+
+            JButton learnMore = new JButton("View Services");
+            learnMore.setBackground(blue);
+            learnMore.setForeground(Color.WHITE);
+            learnMore.setFocusPainted(false);
+            learnMore.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, service.getDetails()));
+
+            card.add(name);
+            card.add(Box.createVerticalStrut(8));
+            card.add(description);
+            card.add(Box.createVerticalStrut(10));
+            card.add(learnMore);
+            cards.add(card);
+        }
+        content.add(cards);
+        content.add(Box.createVerticalStrut(15));
+
+        // Module buttons
+        JLabel modTitle = new JLabel("Online Services");
+        modTitle.setFont(new Font("Arial", Font.BOLD, 20));
+        modTitle.setForeground(navy);
+        modTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(modTitle);
+        content.add(Box.createVerticalStrut(10));
+
+        JPanel modules = new JPanel(new GridLayout(1, 4, 10, 0));
+        modules.setOpaque(false);
+        modules.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        modules.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JButton bResidents = new JButton("Residents Registration");
+        JButton bFood = new JButton("FastBite Ordering");
+        JButton bComplaint = new JButton("File a Complaint");
+        JButton bRecords = new JButton("Citizen Records Report");
+
+        bResidents.addActionListener(e -> { countRequest(); new ResidentsFrame().setVisible(true); });
+        bFood.addActionListener(e -> { countRequest(); new FastBiteFrame().setVisible(true); });
+        bComplaint.addActionListener(e -> { countRequest(); new LoginFrame(); });
+        bRecords.addActionListener(e -> { countRequest(); CitizenRecords.run(this); });
+
+        modules.add(bResidents);
+        modules.add(bFood);
+        modules.add(bComplaint);
+        modules.add(bRecords);
+        content.add(modules);
+
+        main.add(content, BorderLayout.CENTER);
+        add(main);
+    }
+
+    private void countRequest() {
+        totalRequests++;
+        requestCount.setText(String.valueOf(totalRequests));
+    }
+
+    private JPanel createSummaryCard(String title, JLabel valueLabel, Color bg) {
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(bg);
+        card.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+
+        valueLabel.setForeground(Color.WHITE);
+        valueLabel.setFont(new Font("Arial", Font.BOLD, 30));
+
+        JPanel text = new JPanel();
+        text.setOpaque(false);
+        text.setLayout(new BoxLayout(text, BoxLayout.Y_AXIS));
+        text.add(titleLabel);
+        text.add(Box.createVerticalStrut(4));
+        text.add(valueLabel);
+
+        card.add(text, BorderLayout.WEST);
+        return card;
+    }
+}
+
+/* =====================================================================
+ *  Citizen records (JOptionPane module)
+ * ===================================================================== */
+class CitizenRecords {
+
+    private static String ask(Component parent, String prompt) {
+        while (true) {
+            String s = JOptionPane.showInputDialog(parent, prompt, "ESerbisyoPH",
+                    JOptionPane.QUESTION_MESSAGE);
+            if (s == null) return null;               // Cancel
+            if (!s.trim().isEmpty()) return s.trim();
+            JOptionPane.showMessageDialog(parent, "This field cannot be empty.");
+        }
+    }
+
+    private static Integer askInt(Component parent, String prompt, int min, int max) {
+        while (true) {
+            String s = ask(parent, prompt);
+            if (s == null) return null;
+            try {
+                int n = Integer.parseInt(s);
+                if (n >= min && n <= max) return n;
+            } catch (NumberFormatException ignored) { }
+            JOptionPane.showMessageDialog(parent,
+                    "Please enter a number from " + min + " to " + max + ".");
+        }
+    }
+
+    static void run(Component parent) {
+        Integer total = askInt(parent, "ESerbisyoPH\n\nHow many citizen records will you enter?", 1, 100);
+        if (total == null) return;
+
+        StringBuilder report = new StringBuilder();
+        report.append("=========== ESERBISYOPH ===========\n")
+              .append("      REPORTS AND ANALYTICS\n")
+              .append("==================================\n\n")
+              .append("TOTAL RECORDS: ").append(total).append("\n\n");
+
+        for (int i = 1; i <= total; i++) {
+            String name = ask(parent, "Enter Full Name #" + i);
+            if (name == null) return;
+            Integer age = askInt(parent, "Enter Age", 0, 120);
+            if (age == null) return;
+            String sex = ask(parent, "Enter Sex (Male/Female)");
+            if (sex == null) return;
+            String civil = ask(parent, "Enter Civil Status");
+            if (civil == null) return;
+            String address = ask(parent, "Enter Address");
+            if (address == null) return;
+            String email = ask(parent, "Enter Email Address");
+            if (email == null) return;
+            String job = ask(parent, "Enter Employment Status");
+            if (job == null) return;
+
+            report.append("Citizen #").append(i).append("\n")
+                  .append("Name: ").append(name).append("\n")
+                  .append("Age: ").append(age).append("\n")
+                  .append("Sex: ").append(sex).append("\n")
+                  .append("Civil Status: ").append(civil).append("\n")
+                  .append("Address: ").append(address).append("\n")
+                  .append("Email: ").append(email).append("\n")
+                  .append("Employment: ").append(job).append("\n")
+                  .append("----------------------------------\n");
+        }
+
+        JTextArea area = new JTextArea(report.toString());
+        area.setEditable(false);
+        JScrollPane sp = new JScrollPane(area);
+        sp.setPreferredSize(new Dimension(450, 400));
+        JOptionPane.showMessageDialog(parent, sp,
+                "ESerbisyoPH Reports and Analytics", JOptionPane.INFORMATION_MESSAGE);
+    }
+}
+
+/* =====================================================================
+ *  Residents Registration
+ * ===================================================================== */
+class Resident {
+    private final String residentID;
+    private String firstName, lastName, gender, address, contactNumber;
+    private int age;
+
+    Resident(String id, String firstName, String lastName, int age,
+             String gender, String address, String contactNumber) {
+        this.residentID = id;
+        update(firstName, lastName, age, gender, address, contactNumber);
+    }
+
+    String getResidentID() { return residentID; }
+    String getFirstName() { return firstName; }
+    String getLastName() { return lastName; }
+    int getAge() { return age; }
+    String getGender() { return gender; }
+    String getAddress() { return address; }
+    String getContactNumber() { return contactNumber; }
+
+    void update(String firstName, String lastName, int age,
+                String gender, String address, String contactNumber) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.age = age;
+        this.gender = gender;
+        this.address = address;
+        this.contactNumber = contactNumber;
+    }
+}
+
+class ResidentBackend {
+    private final ArrayList<Resident> residents = new ArrayList<>();
+
+    boolean addResident(Resident resident) {
+        if (searchResident(resident.getResidentID()) != null) return false;
+        residents.add(resident);
+        return true;
+    }
+
+    ArrayList<Resident> getResidents() { return residents; }
+
+    Resident searchResident(String id) {
+        for (Resident r : residents) {
+            if (r.getResidentID().equalsIgnoreCase(id)) return r;
+        }
+        return null;
+    }
+
+    boolean updateResident(String id, String fn, String ln, int age,
+                           String gender, String address, String contact) {
+        Resident r = searchResident(id);
+        if (r == null) return false;
+        r.update(fn, ln, age, gender, address, contact);
+        return true;
+    }
+
+    boolean deleteResident(String id) {
+        Resident r = searchResident(id);
+        return r != null && residents.remove(r);
+    }
+}
+
+class ResidentsFrame extends JFrame {
+
+    private final ResidentBackend backend = new ResidentBackend();
+    private final JTextField txtID = new JTextField(), txtFirstName = new JTextField(),
+            txtLastName = new JTextField(), txtAge = new JTextField(),
+            txtAddress = new JTextField(), txtContact = new JTextField();
+    private final JTextField txtSearch = new JTextField(15);
+    private final JComboBox<String> cmbGender =
+            new JComboBox<>(new String[]{"Male", "Female", "Others"});
+    private final JTable tblResidents;
+    private final DefaultTableModel model;
+
+    ResidentsFrame() {
+        setTitle("Residents Registration System");
+        setSize(1000, 700);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10, 10));
+
+        JLabel heading = new JLabel("RESIDENTS REGISTRATION SYSTEM", SwingConstants.CENTER);
+        heading.setFont(new Font("Arial", Font.BOLD, 24));
+        heading.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
+        add(heading, BorderLayout.NORTH);
+
+        JPanel formPanel = new JPanel(new GridLayout(7, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createTitledBorder("Resident Information"));
+        formPanel.add(new JLabel("Resident ID:"));      formPanel.add(txtID);
+        formPanel.add(new JLabel("First Name:"));       formPanel.add(txtFirstName);
+        formPanel.add(new JLabel("Last Name:"));        formPanel.add(txtLastName);
+        formPanel.add(new JLabel("Age:"));              formPanel.add(txtAge);
+        formPanel.add(new JLabel("Gender:"));           formPanel.add(cmbGender);
+        formPanel.add(new JLabel("Address:"));          formPanel.add(txtAddress);
+        formPanel.add(new JLabel("Contact Number:"));   formPanel.add(txtContact);
+
+        JButton btnRegister = new JButton("Register");
+        JButton btnUpdate = new JButton("Update");
+        JButton btnDelete = new JButton("Delete");
+        JButton btnClear = new JButton("Clear");
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(btnRegister);
+        buttonPanel.add(btnUpdate);
+        buttonPanel.add(btnDelete);
+        buttonPanel.add(btnClear);
+
+        JButton btnSearch = new JButton("Search");
+        JButton btnShowAll = new JButton("Show All");
+        JPanel searchPanel = new JPanel();
+        searchPanel.add(new JLabel("Search Resident ID:"));
+        searchPanel.add(txtSearch);
+        searchPanel.add(btnSearch);
+        searchPanel.add(btnShowAll);
+
+        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
+        topPanel.setBorder(BorderFactory.createEmptyBorder(0, 15, 10, 15));
+        topPanel.add(formPanel, BorderLayout.CENTER);
+        topPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+        centerPanel.add(topPanel, BorderLayout.CENTER);
+        centerPanel.add(searchPanel, BorderLayout.SOUTH);
+        add(centerPanel, BorderLayout.CENTER);
+
+        String[] columns = {"Resident ID", "First Name", "Last Name",
+                            "Age", "Gender", "Address", "Contact Number"};
+        model = new DefaultTableModel(columns, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+        tblResidents = new JTable(model);
+        tblResidents.setRowHeight(25);
+        JScrollPane scrollPane = new JScrollPane(tblResidents);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Registered Residents"));
+        scrollPane.setPreferredSize(new Dimension(900, 200));
+        add(scrollPane, BorderLayout.SOUTH);
+
+        btnRegister.addActionListener(e -> registerResident());
+        btnUpdate.addActionListener(e -> updateResident());
+        btnDelete.addActionListener(e -> deleteResident());
+        btnClear.addActionListener(e -> clearForm());
+        btnSearch.addActionListener(e -> searchResident(txtSearch.getText()));
+        btnShowAll.addActionListener(e -> displayResidents());
+
+        tblResidents.getSelectionModel().addListSelectionListener(e -> {
+            if (e.getValueIsAdjusting()) return;
+            int row = tblResidents.getSelectedRow();
+            if (row == -1) return;
+            txtID.setText(model.getValueAt(row, 0).toString());
+            txtFirstName.setText(model.getValueAt(row, 1).toString());
+            txtLastName.setText(model.getValueAt(row, 2).toString());
+            txtAge.setText(model.getValueAt(row, 3).toString());
+            cmbGender.setSelectedItem(model.getValueAt(row, 4).toString());
+            txtAddress.setText(model.getValueAt(row, 5).toString());
+            txtContact.setText(model.getValueAt(row, 6).toString());
+        });
+    }
+
+    private boolean validateForm() {
+        if (txtID.getText().trim().isEmpty() || txtFirstName.getText().trim().isEmpty()
+                || txtLastName.getText().trim().isEmpty() || txtAge.getText().trim().isEmpty()
+                || txtAddress.getText().trim().isEmpty() || txtContact.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all fields.");
+            return false;
+        }
+        if (!txtFirstName.getText().trim().matches("[a-zA-Z .'-]+")
+                || !txtLastName.getText().trim().matches("[a-zA-Z .'-]+")) {
+            JOptionPane.showMessageDialog(this, "Please enter valid names.");
+            return false;
+        }
+        try {
+            int age = Integer.parseInt(txtAge.getText().trim());
+            if (age < 1 || age > 120) {
+                JOptionPane.showMessageDialog(this, "Age must be between 1 and 120.");
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid age.");
+            return false;
+        }
+        if (!txtContact.getText().trim().matches("[0-9]{10,11}")) {
+            JOptionPane.showMessageDialog(this, "Contact number must contain 10 or 11 digits.");
+            return false;
+        }
+        return true;
+    }
+
+    private void registerResident() {
+        if (!validateForm()) return;
+        Resident r = new Resident(txtID.getText().trim(), txtFirstName.getText().trim(),
+                txtLastName.getText().trim(), Integer.parseInt(txtAge.getText().trim()),
+                cmbGender.getSelectedItem().toString(), txtAddress.getText().trim(),
+                txtContact.getText().trim());
+        if (backend.addResident(r)) {
+            JOptionPane.showMessageDialog(this, "Resident registered successfully!");
+            displayResidents();
+            clearForm();
+        } else {
+            JOptionPane.showMessageDialog(this, "Resident ID already exists.");
+        }
+    }
+
+    private void addRow(Resident r) {
+        model.addRow(new Object[]{r.getResidentID(), r.getFirstName(), r.getLastName(),
+                r.getAge(), r.getGender(), r.getAddress(), r.getContactNumber()});
+    }
+
+    private void displayResidents() {
+        model.setRowCount(0);
+        for (Resident r : backend.getResidents()) addRow(r);
+    }
+
+    private void searchResident(String id) {
+        if (id.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a Resident ID.");
+            return;
+        }
+        Resident r = backend.searchResident(id.trim());
+        model.setRowCount(0);
+        if (r != null) {
+            addRow(r);
+        } else {
+            JOptionPane.showMessageDialog(this, "Resident not found.");
+            displayResidents();
+        }
+    }
+
+    private void updateResident() {
+        if (!validateForm()) return;
+        boolean ok = backend.updateResident(txtID.getText().trim(), txtFirstName.getText().trim(),
+                txtLastName.getText().trim(), Integer.parseInt(txtAge.getText().trim()),
+                cmbGender.getSelectedItem().toString(), txtAddress.getText().trim(),
+                txtContact.getText().trim());
+        if (ok) {
+            JOptionPane.showMessageDialog(this, "Resident updated successfully!");
+            displayResidents();
+            clearForm();
+        } else {
+            JOptionPane.showMessageDialog(this, "Resident ID not found. Select a resident first.");
+        }
+    }
+
+    private void deleteResident() {
+        String id = txtID.getText().trim();
+        if (id.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select a resident first.");
+            return;
+        }
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to delete this resident?",
+                "Confirm Delete", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (backend.deleteResident(id)) {
+                JOptionPane.showMessageDialog(this, "Resident deleted successfully!");
+                displayResidents();
+                clearForm();
+            } else {
+                JOptionPane.showMessageDialog(this, "Resident not found.");
+            }
+        }
+    }
+
+    private void clearForm() {
+        tblResidents.clearSelection();
+        txtID.setText("");
+        txtFirstName.setText("");
+        txtLastName.setText("");
+        txtAge.setText("");
+        txtAddress.setText("");
+        txtContact.setText("");
+        cmbGender.setSelectedIndex(0);
+        txtID.requestFocus();
+    }
+}
+
+/* =====================================================================
+ *  FastBite ordering
+ * ===================================================================== */
+abstract class FoodMenuItem {
+    private final int id;
+    private final String name;
+    private final double price;
+
+    FoodMenuItem(int id, String name, double price) {
+        this.id = id; this.name = name; this.price = price;
+    }
+    int getId() { return id; }
+    String getName() { return name; }
+    double getPrice() { return price; }
+    abstract String getDetails();
+}
+
+class FoodItem extends FoodMenuItem {
+    FoodItem(int id, String name, double price) { super(id, name, price); }
+    String getDetails() { return "[FOOD]"; }
+}
+
+class BeverageItem extends FoodMenuItem {
+    BeverageItem(int id, String name, double price) { super(id, name, price); }
+    String getDetails() { return "[DRINK]"; }
+}
+
+class OrderItem {
+    private final FoodMenuItem item;
+    private final int quantity;
+
+    OrderItem(FoodMenuItem item, int quantity) { this.item = item; this.quantity = quantity; }
+    FoodMenuItem getItem() { return item; }
+    int getQuantity() { return quantity; }
+    double getSubtotal() { return item.getPrice() * quantity; }
+}
+
+interface Payable {
+    boolean pay(double amount);
+}
+
+class CashPayment implements Payable {
+    private double cash;
+    private double change;
+
+    public boolean pay(double amount) {
+        if (cash < amount) return false;
+        change = cash - amount;
+        return true;
+    }
+    void setCash(double cash) { this.cash = cash; }
+    double getChange() { return change; }
+}
+
+class Order {
+    private static int nextId = 1001;
+    private final int orderId = nextId++;
+    private final List<OrderItem> items = new ArrayList<>();
+    private String status = "Preparing";
+
+    int getOrderId() { return orderId; }
+    String getStatus() { return status; }
+    void setStatus(String status) { this.status = status; }
+    boolean isEmpty() { return items.isEmpty(); }
+    List<OrderItem> getItems() { return items; }
+
+    void addItem(FoodMenuItem item, int quantity) {
+        if (quantity > 0) items.add(new OrderItem(item, quantity));
+    }
+
+    double getTotal() {
+        double total = 0;
+        for (OrderItem oi : items) total += oi.getSubtotal();
+        return total;
+    }
+}
+
+class FastBiteFrame extends JFrame {
+    private final List<FoodMenuItem> menu = new ArrayList<>();
+    private final List<Order> orders = new ArrayList<>();
+    private double totalSales = 0;
+
+    private DefaultTableModel menuTableModel, cartTableModel, ordersTableModel, salesTableModel;
+    private JTable menuTable, ordersTable;
+    private JLabel lblCartTotal, lblTotalSales, lblTotalOrders;
+    private Order currentOrder = new Order();
+
+    FastBiteFrame() {
+        loadMenu();
+        setTitle("FastBite System");
+        setSize(850, 550);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.addTab("Place Order", createOrderPanel());
+        tabs.addTab("Manage Orders", createManageOrdersPanel());
+        tabs.addTab("Sales Report", createSalesReportPanel());
+        add(tabs);
+    }
+
+    private static DefaultTableModel readOnly(String[] cols) {
+        return new DefaultTableModel(cols, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+    }
+
+    private void loadMenu() {
+        menu.add(new FoodItem(1, "Burger", 85.00));
+        menu.add(new FoodItem(2, "Fried Chicken", 110.00));
+        menu.add(new FoodItem(3, "Fries", 50.00));
+        menu.add(new FoodItem(4, "Spaghetti", 75.00));
+        menu.add(new BeverageItem(5, "Soft Drink", 35.00));
+        menu.add(new BeverageItem(6, "Iced Tea", 40.00));
+    }
+
+    private JPanel createOrderPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        menuTableModel = readOnly(new String[]{"ID", "Type", "Item Name", "Price (P)"});
+        menuTable = new JTable(menuTableModel);
+        for (FoodMenuItem m : menu) {
+            menuTableModel.addRow(new Object[]{m.getId(), m.getDetails(), m.getName(),
+                    String.format("%.2f", m.getPrice())});
+        }
+
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setBorder(BorderFactory.createTitledBorder("Menu"));
+        leftPanel.add(new JScrollPane(menuTable), BorderLayout.CENTER);
+
+        JPanel addPanel = new JPanel(new FlowLayout());
+        JTextField txtQty = new JTextField("1", 3);
+        JButton btnAdd = new JButton("Add to Cart");
+        btnAdd.addActionListener(e -> {
+            int row = menuTable.getSelectedRow();
+            if (row == -1) {
+                JOptionPane.showMessageDialog(this, "Please select a menu item.", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            try {
+                int qty = Integer.parseInt(txtQty.getText().trim());
+                if (qty <= 0) {
+                    JOptionPane.showMessageDialog(this, "Quantity must be greater than 0.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                int id = (int) menuTableModel.getValueAt(row, 0);
+                for (FoodMenuItem m : menu) {
+                    if (m.getId() == id) {
+                        currentOrder.addItem(m, qty);
+                        break;
+                    }
+                }
+                refreshCartTable();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Enter a valid number for quantity.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        addPanel.add(new JLabel("Qty:"));
+        addPanel.add(txtQty);
+        addPanel.add(btnAdd);
+        leftPanel.add(addPanel, BorderLayout.SOUTH);
+
+        cartTableModel = readOnly(new String[]{"Item", "Qty", "Subtotal (P)"});
+        JTable cartTable = new JTable(cartTableModel);
+
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.setBorder(BorderFactory.createTitledBorder("Current Order"));
+        rightPanel.add(new JScrollPane(cartTable), BorderLayout.CENTER);
+
+        lblCartTotal = new JLabel("TOTAL: P0.00");
+        lblCartTotal.setFont(new Font("Arial", Font.BOLD, 14));
+        JButton btnCheckout = new JButton("Checkout & Pay");
+        btnCheckout.addActionListener(e -> checkout());
+
+        JPanel checkoutPanel = new JPanel(new BorderLayout());
+        checkoutPanel.add(lblCartTotal, BorderLayout.NORTH);
+        checkoutPanel.add(btnCheckout, BorderLayout.CENTER);
+        rightPanel.add(checkoutPanel, BorderLayout.SOUTH);
+
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
+        split.setDividerLocation(420);
+        panel.add(split, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void checkout() {
+        if (currentOrder.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Cart is empty.", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String cashStr = JOptionPane.showInputDialog(this,
+                String.format("Total Amount: P%.2f\nEnter cash received:", currentOrder.getTotal()),
+                "Payment", JOptionPane.QUESTION_MESSAGE);
+        if (cashStr == null) return;
+        try {
+            double cash = Double.parseDouble(cashStr.trim());
+            if (Double.isNaN(cash) || Double.isInfinite(cash) || cash <= 0) {
+                throw new NumberFormatException();
+            }
+            CashPayment payment = new CashPayment();
+            payment.setCash(cash);
+            if (payment.pay(currentOrder.getTotal())) {
+                JOptionPane.showMessageDialog(this,
+                        String.format("Payment Successful!\nChange: P%.2f\nOrder No: %d",
+                                payment.getChange(), currentOrder.getOrderId()),
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                orders.add(currentOrder);
+                totalSales += currentOrder.getTotal();
+                currentOrder = new Order();
+                refreshCartTable();
+                refreshOrdersTable();
+                refreshSalesReport();
+            } else {
+                JOptionPane.showMessageDialog(this, "Insufficient payment amount.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid cash amount.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void refreshCartTable() {
+        cartTableModel.setRowCount(0);
+        for (OrderItem oi : currentOrder.getItems()) {
+            cartTableModel.addRow(new Object[]{oi.getItem().getName(), oi.getQuantity(),
+                    String.format("%.2f", oi.getSubtotal())});
+        }
+        lblCartTotal.setText(String.format("TOTAL: P%.2f", currentOrder.getTotal()));
+    }
+
+    private JPanel createManageOrdersPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        ordersTableModel = readOnly(new String[]{"Order No.", "Status", "Total (P)"});
+        ordersTable = new JTable(ordersTableModel);
+        panel.add(new JScrollPane(ordersTable), BorderLayout.CENTER);
+
+        JButton b1 = new JButton("Set to Preparing");
+        JButton b2 = new JButton("Set to Ready");
+        JButton b3 = new JButton("Set to Completed");
+        b1.addActionListener(e -> updateSelectedOrderStatus("Preparing"));
+        b2.addActionListener(e -> updateSelectedOrderStatus("Ready"));
+        b3.addActionListener(e -> updateSelectedOrderStatus("Completed"));
+
+        JPanel btnPanel = new JPanel(new FlowLayout());
+        btnPanel.add(b1); btnPanel.add(b2); btnPanel.add(b3);
+        panel.add(btnPanel, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private void updateSelectedOrderStatus(String newStatus) {
+        int row = ordersTable.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Please select an order from the table.", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int orderId = (int) ordersTableModel.getValueAt(row, 0);
+        for (Order o : orders) {
+            if (o.getOrderId() == orderId) { o.setStatus(newStatus); break; }
+        }
+        refreshOrdersTable();
+        refreshSalesReport();
+    }
+
+    private void refreshOrdersTable() {
+        ordersTableModel.setRowCount(0);
+        for (Order o : orders) {
+            ordersTableModel.addRow(new Object[]{o.getOrderId(), o.getStatus(),
+                    String.format("%.2f", o.getTotal())});
+        }
+    }
+
+    private JPanel createSalesReportPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        lblTotalOrders = new JLabel("Paid Orders: 0");
+        lblTotalSales = new JLabel("Total Sales: P0.00");
+        lblTotalOrders.setFont(new Font("Arial", Font.BOLD, 14));
+        lblTotalSales.setFont(new Font("Arial", Font.BOLD, 14));
+        JPanel top = new JPanel(new GridLayout(1, 2));
+        top.add(lblTotalOrders);
+        top.add(lblTotalSales);
+        panel.add(top, BorderLayout.NORTH);
+
+        salesTableModel = readOnly(new String[]{"Order No.", "Status", "Total (P)"});
+        panel.add(new JScrollPane(new JTable(salesTableModel)), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void refreshSalesReport() {
+        salesTableModel.setRowCount(0);
+        for (Order o : orders) {
+            salesTableModel.addRow(new Object[]{o.getOrderId(), o.getStatus(),
+                    String.format("%.2f", o.getTotal())});
+        }
+        lblTotalOrders.setText("Paid Orders: " + orders.size());
+        lblTotalSales.setText(String.format("Total Sales: P%.2f", totalSales));
+    }
+}
+
+/* =====================================================================
+ *  Complaint system
+ * ===================================================================== */
+class ComplaintData {
+    static final ArrayList<User> users = new ArrayList<>();
+    static final ArrayList<Complaint> complaints = new ArrayList<>();
+    static User currentUser = null;
+
+    static {
+        users.add(new User("admin", "admin123", true));   // default admin
+    }
+}
+
+class User {
+    final String username, password;
+    final boolean isAdmin;
+
+    User(String username, String password, boolean isAdmin) {
+        this.username = username; this.password = password; this.isAdmin = isAdmin;
+    }
+}
+
+class Complaint {
+    final String firstName, lastName, email, date, type, description, screenshotPath;
+    String status = "Pending";
+
+    Complaint(String firstName, String lastName, String email, String date,
+              String type, String description, String screenshotPath) {
+        this.firstName = firstName; this.lastName = lastName; this.email = email;
+        this.date = date; this.type = type; this.description = description;
+        this.screenshotPath = screenshotPath;
+    }
+
+    @Override public String toString() {
+        return "Name: " + firstName + " " + lastName +
+               "\nEmail: " + email +
+               "\nDate: " + date +
+               "\nType: " + type +
+               "\nStatus: " + status +
+               "\nDescription: " + description +
+               "\nScreenshot: " + (screenshotPath.isEmpty() ? "None" : screenshotPath) +
+               "\n----------------------------------------";
+    }
+}
+
+class LoginFrame extends JFrame {
+    private final JTextField userField = new JTextField();
+    private final JPasswordField passField = new JPasswordField();
+
+    LoginFrame() {
+        setTitle("Public Service Complaint System - Login");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10, 10));
+
+        JLabel title = new JLabel("Login", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 22));
+        add(title, BorderLayout.NORTH);
+
+        JPanel panel = new JPanel(new GridLayout(4, 1, 8, 8));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        panel.add(new JLabel("Username:"));
+        panel.add(userField);
+        panel.add(new JLabel("Password:"));
+        panel.add(passField);
+        add(panel, BorderLayout.CENTER);
+
+        JButton loginBtn = new JButton("Login");
+        JButton registerBtn = new JButton("Register");
+        loginBtn.addActionListener(e -> login());
+        registerBtn.addActionListener(e -> { dispose(); new RegisterFrame(); });
+
+        JPanel btnPanel = new JPanel();
+        btnPanel.add(loginBtn);
+        btnPanel.add(registerBtn);
+        add(btnPanel, BorderLayout.SOUTH);
+        setVisible(true);
+    }
+
+    private void login() {
+        String username = userField.getText().trim();
+        String password = new String(passField.getPassword());
+        for (User u : ComplaintData.users) {
+            if (u.username.equals(username) && u.password.equals(password)) {
+                ComplaintData.currentUser = u;
+                dispose();
+                new DashboardFrame();
+                return;
+            }
+        }
+        JOptionPane.showMessageDialog(this, "Wrong username or password!");
+    }
+}
+
+class RegisterFrame extends JFrame {
+    private final JTextField userField = new JTextField();
+    private final JPasswordField passField = new JPasswordField();
+
+    RegisterFrame() {
+        setTitle("Register");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10, 10));
+
+        JLabel title = new JLabel("Create Account", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 20));
+        add(title, BorderLayout.NORTH);
+
+        JPanel panel = new JPanel(new GridLayout(4, 1, 8, 8));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+        panel.add(new JLabel("Username:"));
+        panel.add(userField);
+        panel.add(new JLabel("Password:"));
+        panel.add(passField);
+        add(panel, BorderLayout.CENTER);
+
+        JButton registerBtn = new JButton("Register");
+        JButton backBtn = new JButton("Back");
+        registerBtn.addActionListener(e -> register());
+        backBtn.addActionListener(e -> { dispose(); new LoginFrame(); });
+
+        JPanel btnPanel = new JPanel();
+        btnPanel.add(registerBtn);
+        btnPanel.add(backBtn);
+        add(btnPanel, BorderLayout.SOUTH);
+        setVisible(true);
+    }
+
+    private void register() {
+        String username = userField.getText().trim();
+        String password = new String(passField.getPassword());
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill all fields!");
+            return;
+        }
+        for (User u : ComplaintData.users) {
+            if (u.username.equals(username)) {
+                JOptionPane.showMessageDialog(this, "Username already exists!");
+                return;
+            }
+        }
+        ComplaintData.users.add(new User(username, password, false));
+        JOptionPane.showMessageDialog(this, "Registration successful!");
+        dispose();
+        new LoginFrame();
+    }
+}
+
+class DashboardFrame extends JFrame {
+
+    DashboardFrame() {
+        setTitle("Complaint System - Dashboard");
+        setSize(500, 380);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        String welcome = "Welcome, " + ComplaintData.currentUser.username;
+        if (ComplaintData.currentUser.isAdmin) welcome += " (Administrator)";
+        JLabel title = new JLabel(welcome, SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 18));
+        title.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
+        add(title, BorderLayout.NORTH);
+
+        JPanel panel = new JPanel(new GridLayout(4, 1, 12, 12));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 60, 20, 60));
+
+        JButton submitBtn = new JButton("Submit Complaint");
+        JButton viewBtn = new JButton("View All Complaints");
+        JButton reportBtn = new JButton("Reports & Analytics");
+        JButton logoutBtn = new JButton("Logout");
+
+        Font f = new Font("Arial", Font.PLAIN, 15);
+        for (JButton b : new JButton[]{submitBtn, viewBtn, reportBtn, logoutBtn}) b.setFont(f);
+
+        submitBtn.addActionListener(e -> new SubmitComplaintFrame());
+        viewBtn.addActionListener(e -> { if (requireAdmin()) viewComplaints(); });
+        reportBtn.addActionListener(e -> { if (requireAdmin()) showReports(); });
+        logoutBtn.addActionListener(e -> {
+            ComplaintData.currentUser = null;
+            dispose();
+            new LoginFrame();
+        });
+
+        panel.add(submitBtn);
+        panel.add(viewBtn);
+        panel.add(reportBtn);
+        panel.add(logoutBtn);
+        add(panel, BorderLayout.CENTER);
+        setVisible(true);
+    }
+
+    private boolean requireAdmin() {
+        if (ComplaintData.currentUser != null && ComplaintData.currentUser.isAdmin) return true;
+        JOptionPane.showMessageDialog(this, "Only the administrator can use this feature.");
+        return false;
+    }
+
+    private void viewComplaints() {
+        if (ComplaintData.complaints.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No complaints submitted yet.");
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        int i = 1;
+        for (Complaint c : ComplaintData.complaints) {
+            sb.append(i++).append(".\n").append(c).append("\n");
+        }
+        JTextArea area = new JTextArea(sb.toString());
+        area.setEditable(false);
+        area.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        JScrollPane scroll = new JScrollPane(area);
+        scroll.setPreferredSize(new Dimension(500, 380));
+        JOptionPane.showMessageDialog(this, scroll, "All Complaints", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void showReports() {
+        int technical = 0, content = 0, ui = 0, accessibility = 0, other = 0;
+        for (Complaint c : ComplaintData.complaints) {
+            switch (c.type) {
+                case "Technical Issue": technical++; break;
+                case "Content Error": content++; break;
+                case "User Interface Problem": ui++; break;
+                case "Accessibility Issue": accessibility++; break;
+                default: other++;
+            }
+        }
+        String report = "========== COMPLAINT REPORTS ==========\n\n"
+                + "Total Complaints          : " + ComplaintData.complaints.size() + "\n\n"
+                + "Technical Issue           : " + technical + "\n"
+                + "Content Error             : " + content + "\n"
+                + "User Interface Problem    : " + ui + "\n"
+                + "Accessibility Issue       : " + accessibility + "\n"
+                + "Other                     : " + other + "\n";
+        JOptionPane.showMessageDialog(this, report, "Reports & Analytics", JOptionPane.INFORMATION_MESSAGE);
+    }
+}
+
+class SubmitComplaintFrame extends JFrame {
+
+    private final JTextField firstNameField = new JTextField(), lastNameField = new JTextField(),
+            emailField = new JTextField(), dateField = new JTextField();
+    private final JRadioButton techBtn = new JRadioButton("Technical Issue"),
+            contentBtn = new JRadioButton("Content Error"),
+            uiBtn = new JRadioButton("User Interface Problem"),
+            accessBtn = new JRadioButton("Accessibility Issue"),
+            otherBtn = new JRadioButton("Other");
+    private final JTextArea descArea = new JTextArea(4, 20);
+    private final JLabel fileLabel = new JLabel("No file selected");
+    private final JLabel imagePreviewLabel =
+            new JLabel("Image preview will appear here", SwingConstants.CENTER);
+    private String selectedFilePath = "";
+
+    SubmitComplaintFrame() {
+        setTitle("Website Complaint Form");
+        setSize(550, 750);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        JLabel title = new JLabel("Website Complaint Form", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 22));
+        title.setBorder(BorderFactory.createEmptyBorder(15, 0, 5, 0));
+        add(title, BorderLayout.NORTH);
+
+        JPanel form = new JPanel();
+        form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
+        form.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
+
+        form.add(createLabel("Full Name"));
+        JPanel namePanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        namePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        namePanel.add(createFieldWithHint(firstNameField, "First Name"));
+        namePanel.add(createFieldWithHint(lastNameField, "Last Name"));
+        form.add(namePanel);
+        form.add(Box.createVerticalStrut(10));
+
+        form.add(createLabel("Email Address"));
+        form.add(createFieldWithHint(emailField, "example@example.com"));
+        form.add(Box.createVerticalStrut(10));
+
+        form.add(createLabel("Date of Incident"));
+        form.add(createFieldWithHint(dateField, "MM-DD-YYYY"));
+        form.add(Box.createVerticalStrut(10));
+
+        form.add(createLabel("Type of Complaint"));
+        ButtonGroup group = new ButtonGroup();
+        JPanel radioPanel = new JPanel();
+        radioPanel.setLayout(new BoxLayout(radioPanel, BoxLayout.Y_AXIS));
+        radioPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        for (JRadioButton rb : new JRadioButton[]{techBtn, contentBtn, uiBtn, accessBtn, otherBtn}) {
+            group.add(rb);
+            radioPanel.add(rb);
+        }
+        techBtn.setSelected(true);
+        form.add(radioPanel);
+        form.add(Box.createVerticalStrut(10));
+
+        form.add(createLabel("Description of the Complaint"));
+        descArea.setLineWrap(true);
+        descArea.setWrapStyleWord(true);
+        JScrollPane scroll = new JScrollPane(descArea);
+        scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+        scroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(scroll);
+        form.add(Box.createVerticalStrut(10));
+
+        form.add(createLabel("Upload Screenshot (if any)"));
+        JButton fileBtn = new JButton("Choose File");
+        fileBtn.addActionListener(e -> chooseFile());
+        JPanel filePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        filePanel.add(fileBtn);
+        filePanel.add(fileLabel);
+        filePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(filePanel);
+
+        Dimension prev = new Dimension(220, 150);
+        imagePreviewLabel.setPreferredSize(prev);
+        imagePreviewLabel.setMinimumSize(prev);
+        imagePreviewLabel.setMaximumSize(prev);
+        imagePreviewLabel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        imagePreviewLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(Box.createVerticalStrut(8));
+        form.add(imagePreviewLabel);
+
+        JScrollPane mainScroll = new JScrollPane(form);
+        mainScroll.setBorder(null);
+        add(mainScroll, BorderLayout.CENTER);
+
+        JButton submitBtn = new JButton("Submit");
+        submitBtn.setBackground(new Color(0, 150, 0));
+        submitBtn.setForeground(Color.WHITE);
+        submitBtn.setFont(new Font("Arial", Font.BOLD, 15));
+        submitBtn.setFocusPainted(false);
+        submitBtn.addActionListener(e -> submitComplaint());
+
+        JPanel bottom = new JPanel();
+        bottom.setBorder(BorderFactory.createEmptyBorder(10, 0, 15, 0));
+        bottom.add(submitBtn);
+        add(bottom, BorderLayout.SOUTH);
+        setVisible(true);
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Arial", Font.BOLD, 13));
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return label;
+    }
+
+    private JPanel createFieldWithHint(JTextField field, String hint) {
+        JPanel p = new JPanel(new BorderLayout());
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)));
+        p.add(field, BorderLayout.CENTER);
+        JLabel hintLabel = new JLabel(hint);
+        hintLabel.setFont(new Font("Arial", Font.PLAIN, 11));
+        hintLabel.setForeground(Color.GRAY);
+        p.add(hintLabel, BorderLayout.SOUTH);
+        p.setAlignmentX(Component.LEFT_ALIGNMENT);
+        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
+        return p;
+    }
+
+    private void chooseFile() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter(
+                "Image files", "jpg", "jpeg", "png", "gif", "bmp"));
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+        File file = chooser.getSelectedFile();
+        selectedFilePath = file.getAbsolutePath();
+        fileLabel.setText(file.getName());
+
+        ImageIcon icon = new ImageIcon(selectedFilePath);
+        if (icon.getIconWidth() <= 0) {                 // not a readable image
+            imagePreviewLabel.setIcon(null);
+            imagePreviewLabel.setText("Cannot preview this image");
+            return;
+        }
+        Image img = icon.getImage().getScaledInstance(200, 140, Image.SCALE_SMOOTH);
+        imagePreviewLabel.setIcon(new ImageIcon(img));
+        imagePreviewLabel.setText("");
+    }
+
+    private void submitComplaint() {
+        String firstName = firstNameField.getText().trim();
+        String lastName = lastNameField.getText().trim();
+        String email = emailField.getText().trim();
+        String date = dateField.getText().trim();
+        String description = descArea.getText().trim();
+
+        if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty()
+                || date.isEmpty() || description.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all required fields!");
+            return;
+        }
+        if (!email.matches("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$")) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid email address.");
+            return;
+        }
+        if (!date.matches("^(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])-\\d{4}$")) {
+            JOptionPane.showMessageDialog(this, "Date must be in MM-DD-YYYY format.");
+            return;
+        }
+
+        String type = "Other";
+        if (techBtn.isSelected()) type = "Technical Issue";
+        else if (contentBtn.isSelected()) type = "Content Error";
+        else if (uiBtn.isSelected()) type = "User Interface Problem";
+        else if (accessBtn.isSelected()) type = "Accessibility Issue";
+
+        ComplaintData.complaints.add(new Complaint(firstName, lastName, email,
+                date, type, description, selectedFilePath));
+        JOptionPane.showMessageDialog(this,
+                "Complaint submitted successfully!\nThank you for your feedback.");
+        dispose();
+    }
+}
 
